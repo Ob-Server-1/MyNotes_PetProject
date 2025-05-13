@@ -2,5 +2,4 @@
 
 namespace MyNotes_PetProject.Contract;
 
-public record GetNotesRequest(string serch, string sortItem, string sortOrder); //Контракт на сортивку и получение данных
-// 14 16 ролик
+public record GetNotesRequest(string? Serch, string? SortOrder, string? SortItem ="id"); //Контракт на сортивку и получение данных

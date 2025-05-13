@@ -7,10 +7,10 @@ public class Note
         Console.WriteLine("Идет использование контролера Note");
         Name= name;
         Description= description;
-        CreatedAt = DateTime.Now; //При использование контролера свойсву Date идет дата создания сегодн
+        CreatedAt = DateTime.UtcNow; //При использование контролера свойсву Date идет дата создания сегодн
     }
-    public Guid Id { get; set; }
-    public string Name { get; set; } 
-    public string Description { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public Guid Id { get; init; }
+    public string Name { get; init; } 
+    public string Description { get; init; }
+    public DateTime CreatedAt { get; init; } //Время создания
 }   

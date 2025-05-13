@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MyNotes_PetProject.Contract;
 using MyNotes_PetProject.DateAccess;
 using MyNotes_PetProject.Models;
+using System.Linq.Expressions;
 namespace MyNotes_PetProject.Controllers;
 
  
@@ -10,7 +12,7 @@ namespace MyNotes_PetProject.Controllers;
 public class NotesController : ControllerBase // ControllerBase нужен для создание оконтроллеров и их интеграцию
 {                                   // В Депеденси инжекшен
     private readonly NotesDbContext _context;
-    public NotesController(NotesDbContext dbContext)
+    public NotesController(NotesDbContext dbContext) //Через конструктор кидаем ДБ контекст для работы с бд
     { 
         _context = dbContext;
     }
@@ -26,10 +28,36 @@ public class NotesController : ControllerBase // ControllerBase нужен дл�
         await _context.SaveChangesAsync(ct); //Сохраняем изменения
         return Ok(); //Статус код 200 
     }
-    [HttpGet] 
-    public async Task<IActionResult> Get(string serch, string sortItem, string sortOrder)
+    [HttpGet]
+    public async Task<IActionResult> Get([FromQuery] GetNotesRequest request, CancellationToken ct)
     {
+     
+        var notesQuery = _context.Notes   //Фильтр по поиску названия заметок
+                 .Where(n => string.IsNullOrWhiteSpace(request.Serch) ||
+                     n.Name.ToLower().Contains(request.Serch.ToLower()));
 
-        return Ok();
+        Expression<Func<Note, object>> selectorKey = request.SortItem.ToLower() switch
+        {
+            "date" => note => note.CreatedAt,
+            "name" => note => note.Name,
+            _ => note => note.Id
+        };
+
+        //Тернарная операция Если
+        notesQuery = request.SortOrder == "desc"
+                 ? notesQuery.OrderByDescending(selectorKey)
+                 : notesQuery.OrderBy(selectorKey);
+
+
+        var noteDtos = await notesQuery
+            .Select(n => new NoteDto(n.Id, n.Name, n.Description, n.CreatedAt))
+            .ToListAsync(ct);
+
+        return Ok(new GetNotesResponse(noteDtos));
+
+
     }
+
+    //Примечание KeySelector - Это прааметр по которому нужно сортировать данные
+
 }
